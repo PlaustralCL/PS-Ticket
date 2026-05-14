@@ -36,31 +36,30 @@ While ($true) {
 '@
     
     $isValidInput = $false
-    $allowedInput = 0..($ticketTypes.Length - 1) + 'exit'
+    # Use numbered input instead of typing the full name of the ticket type
+    $allowedInput = 0..($ticketTypes.Length - 1)
 
     While (-not $isValidInput) {
         for ($i = 0; $i -lt $ticketTypes.Length; $i++) {
                 Write-Host "[$i] $($ticketTypes[$i])"
         }
 
-        $userInput = Read-Host -Prompt "Choose ticket type or type 'exit'"    
+        $userInput = Read-Host -Prompt "Choose ticket type or type 'exit'" 
+        if ($userInput.ToLower() -eq 'exit') {
+            exit   
+        }    
  
         if ($userInput -notin $allowedInput) {
             Write-Host "Invaild option: $userInput. Please try again."
         } else {
             $isValidInput = $true
         }
-    }    
-        
-    if ($userInput -eq 'exit') {
-        exit   
-    } 
+    }          
 
     $ticketTopic = Read-Host -Prompt "Enter the topic"  
-    if ($ticketTopic -eq 'exit') {
+    if ($ticketTopic.ToLower() -eq 'exit') {
         exit
     }
-
     
     $ticketType = $ticketTypes[[int] $userInput]
     $flair = ""    
