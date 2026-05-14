@@ -2,14 +2,30 @@
 $ticketsDirectory = "1-tickets"
 $templatesDirectory = "templates"
 
-$ticketTypes = @(
-    "pvsr"
-    "cmpl"
-    "other"
-)
+#$ticketTypes = @(
+#    "pvsr"
+#    "cmpl"
+#    "other"
+#)
+
+
 
 # Application code
-$originalDirectory = $PWD
+$originalDirectory = Get-Location
+
+# Set location to the script root. This will make relative paths easier.
+Set-Location $PSScriptRoot
+
+
+# Use the directory names in the templates directory as the source
+# of ticket types. The names are converted to strings to make them easier
+# work with.
+$ticketTypes = [string []] (Get-ChildItem -Path $templatesDirectory -Directory)
+
+
+
+
+
 
 While ($true) {
     Clear-Host
@@ -37,41 +53,46 @@ While ($true) {
     }    
         
     if ($userInput -eq 'exit') {
+        exit   
+    } 
+
+    $ticketTopic = Read-Host -Prompt "Enter the topic"  
+    if ($ticketTopic -eq 'exit') {
         exit
-    } elseif ([int] $userInput -eq ($ticketTypes.Length - 1)) {
-        $ticketType = ""
-    } else {
-        $ticketType = $ticketTypes[[int] $userInput]
-        $templatePath = Join-Path -Path $templatesDirectory -ChildPath $ticketType
     }
 
-    $ticketTopic = Read-Host -Prompt "Enter the topic"
     
-    # Set location to the script root. This will make relative
-    # paths easier.
-    Set-Location $PSScriptRoot
-    $workingDirectory = pwd
+    $ticketType = $ticketTypes[[int] $userInput]
+    $flair = ""    
+
+    if ($ticketType -ne "misc") { 
+        $flair = $ticketType.ToUpper()
+        $templatePath = Join-Path -Path $templatesDirectory -ChildPath $ticketType
+    }  
+
 
     # Build ticket name
     $index = [int] (Get-Content -Path "index.txt")
     $twoDigitYear = Get-Date -Format "yy"
     $ticketName = ""
-    if ($ticketType -eq "") {
-        $ticketName = "$twoDigitYear.$index$ticketType - $ticketTopic"
+    if ($flair -eq "") {
+        $ticketName = "$twoDigitYear.$index - $ticketTopic"
     } else {
-        $ticketName = "$twoDigitYear.$index.$ticketType - $ticketTopic"
+        $ticketName = "$twoDigitYear.$index.$flair - $ticketTopic"
     } 
 
     $ticketPath = Join-Path -Path $ticketsDirectory -ChildPath $ticketName
 
     # Create the new directory
     New-Item -Path $ticketsDirectory -Name $ticketName -ItemType Directory | Out-Null
-    $miscTempaltePath = Join-Path -Path $templatesDirectory -ChildPath "misc"
+        
 
     # Copy the misc template directory
+    $miscTempaltePath = Join-Path -Path $templatesDirectory -ChildPath "misc"
     Copy-Item -Path $miscTempaltePath -Destination $ticketPath -Recurse
+
     # Copy the appropriate template folder, if applicable
-    if ($ticketType -ne "") {
+    if ($ticketType -ne "misc") {
         Copy-Item -Path $templatePath -Destination $ticketPath -Recurse
     }
 
