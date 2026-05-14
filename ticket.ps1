@@ -12,6 +12,15 @@
 # template folder name is used. Some branching is hard coded based on a 
 # ticket type of "misc". Removing the misc template folder/ type option 
 # without updating the code will result in errors.
+# 
+# **Assumptions**
+# The program assumes that there is already a file called index.txt in the
+# same folder as itself. The index.txt file should only contain the next
+# index number.
+#
+# There should also be directories for template folders and the new tickets.
+# The names of these directories are hard coded below as 
+# $templatesDirectory and $ticketsDirectory respectively.
 
 $originalDirectory = Get-Location
 
@@ -65,15 +74,17 @@ While ($true) {
     
     # Build ticket name
     $index = [int] (Get-Content -Path "index.txt")
+    $formattedIndex = $index.ToString("000")
     $twoDigitYear = Get-Date -Format "yy"
     $ticketName = "" 
+    
 
     if ($ticketType -ne "misc") { 
         $flair = $ticketType.ToUpper()
-        $ticketName = "$twoDigitYear.$index.$flair - $ticketTopic"
+        $ticketName = "$twoDigitYear.$formattedIndex.$flair - $ticketTopic"
         $templatePath = Join-Path -Path $templatesDirectory -ChildPath $ticketType
     } else {
-        $ticketName = "$twoDigitYear.$index - $ticketTopic"
+        $ticketName = "$twoDigitYear.$formattedIndex - $ticketTopic"
     }
 
     $ticketPath = Join-Path -Path $ticketsDirectory -ChildPath $ticketName
