@@ -21,19 +21,27 @@
 # There should also be directories for template folders and the new tickets.
 # The names of these directories are hard coded below as 
 # $templatesDirectory and $ticketsDirectory respectively.
+# 
+# The name of the default template is stored in $defaultTemplate. This folder
+# is copied to every new folder created.
+
 
 $originalDirectory = Get-Location
 
 # Set location to the script root. This will make relative paths easier.
 Set-Location $PSScriptRoot
 
+$ticketsDirectory = "1-tickets"
+$templatesDirectory = "templates"
+$defaultTemplate = "misc"
+
 # Use the directory names in the templates directory as the source
 # of ticket types. The names are converted to strings to make them easier
 # work with.
 $ticketTypes = [string []] (Get-ChildItem -Path $templatesDirectory -Directory)
+write-host($ticketTypes)
 
-$ticketsDirectory = "1-tickets"
-$templatesDirectory = "templates"
+
 
 While ($true) {
     Clear-Host
@@ -49,11 +57,13 @@ While ($true) {
 
     While (-not $isValidInput) {
         for ($i = 0; $i -lt $ticketTypes.Length; $i++) {
-                Write-Host "[$i] $($ticketTypes[$i])"
+                $displayNumber = $i.ToString("00")
+                Write-Host "[$displayNumber] $($ticketTypes[$i])"
         }
 
         $userInput = Read-Host -Prompt "Choose ticket type or type 'exit'" 
         if ($userInput.ToLower() -eq 'exit') {
+            Set-Location $originalDirectory
             exit   
         }    
  
@@ -66,6 +76,7 @@ While ($true) {
 
     $ticketTopic = Read-Host -Prompt "Enter the topic"  
     if ($ticketTopic.ToLower() -eq 'exit') {
+        Set-Location $originalDirectory
         exit
     }
     
@@ -79,7 +90,7 @@ While ($true) {
     $ticketName = "" 
     
 
-    if ($ticketType -ne "misc") { 
+    if ($ticketType -ne $defaultTemplate) { 
         $flair = $ticketType.ToUpper()
         $ticketName = "$twoDigitYear.$formattedIndex.$flair - $ticketTopic"
         $templatePath = Join-Path -Path $templatesDirectory -ChildPath $ticketType
@@ -93,13 +104,13 @@ While ($true) {
     New-Item -Path $ticketsDirectory -Name $ticketName -ItemType Directory | Out-Null
         
 
-    # Copy the misc template directory
-    $miscTempaltePath = Join-Path -Path $templatesDirectory -ChildPath "misc"
-    Copy-Item -Path $miscTempaltePath -Destination $ticketPath -Recurse
+    # Copy the default template directory
+    $defaultTempaltePath = Join-Path -Path $templatesDirectory -ChildPath $defaultTemplate
+    Copy-Item -Path $defaultTempaltePath -Destination $ticketPath -Recurse
 
     # Copy the appropriate template folder, if applicable
-    if ($ticketType -ne "misc") {
-        Copy-Item -Path $templatePath -Destination $ticketPath -Recurse
+    if ($ticketType -ne $defaultTemplate) {
+        Copy-Item -Path "$templatePath\*" -Destination $ticketPath -Recurse
     }
 
     $index++
